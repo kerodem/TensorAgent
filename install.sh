@@ -7,13 +7,17 @@ REPO_URL="https://github.com/kerodem/TensorAgent/archive/refs/heads/main.zip"
 
 echo "Installing $APP_NAME..."
 
-# --- Check Python ---
+# --- Requirements ---
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "❌ Python3 required."
+  echo "❌ Python3 is required."
   exit 1
 fi
 
-# --- Check tmux ---
+if ! command -v unzip >/dev/null 2>&1; then
+  echo "❌ unzip is required."
+  exit 1
+fi
+
 if ! command -v tmux >/dev/null 2>&1; then
   echo "⚠️ Installing tmux..."
   if command -v brew >/dev/null; then
@@ -21,18 +25,12 @@ if ! command -v tmux >/dev/null 2>&1; then
   elif command -v apt >/dev/null; then
     sudo apt install -y tmux
   else
-    echo "❌ Install tmux manually."
+    echo "❌ Please install tmux manually."
     exit 1
   fi
 fi
 
-# --- Check unzip ---
-if ! command -v unzip >/dev/null 2>&1; then
-  echo "❌ unzip required."
-  exit 1
-fi
-
-# --- Prepare install dir ---
+# --- Clean install ---
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR"
 
@@ -44,7 +42,6 @@ curl -fsSL "$REPO_URL" -o repo.zip
 unzip -q repo.zip
 cd TensorAgent-main
 
-# --- Copy files ---
 cp -r * "$APP_DIR"
 
 # --- Create CLI wrapper ---
@@ -55,22 +52,23 @@ EOF
 
 chmod +x "$APP_DIR/tensoragent"
 
-# --- Setup user-level binary ---
-echo "Setting up TensorAgent..."
+# --- Global install (ONE-SHOT UX) ---
+echo "Linking TensorAgent globally (requires password)..."
 
-mkdir -p "$HOME/.local/bin"
-ln -sf "$APP_DIR/tensoragent" "$HOME/.local/bin/tensoragent"
-
-# Make it available immediately
-export PATH="$HOME/.local/bin:$PATH"
-
-echo "✅ Installed TensorAgent"
-
-# --- Persist PATH if needed ---
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+if sudo ln -sf "$APP_DIR/tensoragent" /usr/local/bin/tensoragent; then
   echo
-  echo "Add this to your shell config (~/.zshrc or ~/.bashrc):"
-  echo 'export PATH="$HOME/.local/bin:$PATH"'
+  echo "✅ Installed TensorAgent"
+else
+  echo
+  echo "❌ Failed to install globally."
+  echo "TensorAgent requires access to /usr/local/bin."
+  exit 1
+fi
+
+# --- Verify ---
+if ! command -v tensoragent >/dev/null 2>&1; then
+  echo "❌ Installation verification failed."
+  exit 1
 fi
 
 echo
