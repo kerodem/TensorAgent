@@ -2,18 +2,18 @@
 set -euo pipefail
 
 APP_NAME="tensoragent"
-INSTALL_DIR="/usr/local/bin"
 APP_DIR="$HOME/.tensoragent"
 REPO_URL="https://github.com/kerodem/TensorAgent/archive/refs/heads/main.zip"
 
 echo "Installing $APP_NAME..."
 
-# --- Checks ---
+# --- Check Python ---
 if ! command -v python3 >/dev/null 2>&1; then
   echo "❌ Python3 required."
   exit 1
 fi
 
+# --- Check tmux ---
 if ! command -v tmux >/dev/null 2>&1; then
   echo "⚠️ Installing tmux..."
   if command -v brew >/dev/null; then
@@ -26,28 +26,28 @@ if ! command -v tmux >/dev/null 2>&1; then
   fi
 fi
 
+# --- Check unzip ---
 if ! command -v unzip >/dev/null 2>&1; then
   echo "❌ unzip required."
   exit 1
 fi
 
-# --- Prepare dirs ---
+# --- Prepare install dir ---
+rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR"
 
 TMP_DIR=$(mktemp -d)
 cd "$TMP_DIR"
 
-echo "Downloading..."
+echo "Downloading TensorAgent..."
 curl -fsSL "$REPO_URL" -o repo.zip
 unzip -q repo.zip
 cd TensorAgent-main
 
-# Clean install
-rm -rf "$APP_DIR"
-mkdir -p "$APP_DIR"
+# --- Copy files ---
 cp -r * "$APP_DIR"
 
-# --- Create CLI ---
+# --- Create CLI wrapper ---
 cat << 'EOF' > "$APP_DIR/tensoragent"
 #!/usr/bin/env bash
 python3 "$HOME/.tensoragent/scripts/native_llm_terminal.py" "$@"
@@ -55,22 +55,24 @@ EOF
 
 chmod +x "$APP_DIR/tensoragent"
 
-# --- Linking ---
-echo "Linking TensorAgent..."
+# --- Setup user-level binary ---
+echo "Setting up TensorAgent..."
 
-if sudo ln -sf "$APP_DIR/tensoragent" /usr/local/bin/tensoragent; then
-  echo "✅ Linked to /usr/local/bin"
-else
-  echo "❌ Failed to link"
-  exit 1
-fi
+mkdir -p "$HOME/.local/bin"
+ln -sf "$APP_DIR/tensoragent" "$HOME/.local/bin/tensoragent"
 
-# --- Final verify ---
-if [ -f "/usr/local/bin/tensoragent" ]; then
+# Make it available immediately
+export PATH="$HOME/.local/bin:$PATH"
+
+echo "✅ Installed TensorAgent"
+
+# --- Persist PATH if needed ---
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
   echo
-  echo "✅ Installed TensorAgent"
-  echo "Run: tensoragent orchestrate"
-else
-  echo "❌ Installation failed"
-  exit 1
+  echo "Add this to your shell config (~/.zshrc or ~/.bashrc):"
+  echo 'export PATH="$HOME/.local/bin:$PATH"'
 fi
+
+echo
+echo "Run:"
+echo "  tensoragent orchestrate"
