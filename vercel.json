@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/install.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "routes": [
     {
       "src": "/",
