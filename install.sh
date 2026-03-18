@@ -41,7 +41,7 @@ cp -r TensorAgent-main/* "$APP_DIR"
 # Create CLI
 cat << 'EOF' > "$APP_DIR/tensoragent"
 #!/usr/bin/env bash
-python3 "$HOME/.tensoragent/native_llm_terminal.py" "$@"
+python3 "$HOME/.tensoragent/scripts/native_llm_terminal.py" "$@"
 EOF
 
 chmod +x "$APP_DIR/tensoragent"
