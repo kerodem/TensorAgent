@@ -31,7 +31,7 @@ Use the top-right `Settings` button to configure:
 - working directory
 - safety checks
 - unsafe shell command override (off by default)
-- auto-launch behavior
+- auto-launch behavior (off by default)
 - per-pane provider/model/args/custom command
 
 Closing Settings automatically applies and relaunches the orchestration grid.

@@ -7,7 +7,7 @@ final class OrchestratorViewModel: ObservableObject {
     @Published var cwdInput: String = FileManager.default.currentDirectoryPath
     @Published var skipSafetyChecks: Bool = false
     @Published var allowUnsafeShellCommands: Bool = false
-    @Published var autoLaunchOnStart: Bool = true
+    @Published var autoLaunchOnStart: Bool = false
     @Published var errorMessage: String?
 
     private var didInitialLaunch = false
