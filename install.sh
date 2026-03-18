@@ -45,7 +45,7 @@ python3 "$HOME/.tensoragent/scripts/native_llm_terminal.py" "$@"
 EOF
 
 chmod +x "$APP_DIR/tensoragent"
-ln -sf "$APP_DIR/tensoragent" "$INSTALL_DIR/tensoragent"
+sudo ln -sf "$APP_DIR/tensoragent" "$INSTALL_DIR/tensoragent"
 
 echo
 echo "✅ Installed TensorAgent"
