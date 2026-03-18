@@ -18,6 +18,7 @@ if ! command -v unzip >/dev/null 2>&1; then
   exit 1
 fi
 
+# --- tmux check ---
 if ! command -v tmux >/dev/null 2>&1; then
   echo "⚠️ Installing tmux..."
   if command -v brew >/dev/null; then
@@ -52,25 +53,35 @@ EOF
 
 chmod +x "$APP_DIR/tensoragent"
 
-# --- Global install (ONE-SHOT UX) ---
+# --- GLOBAL INSTALL (STRICT ONE-SHOT) ---
 echo "Linking TensorAgent globally (requires password)..."
 
-if sudo ln -sf "$APP_DIR/tensoragent" /usr/local/bin/tensoragent; then
-  echo
-  echo "✅ Installed TensorAgent"
-else
-  echo
-  echo "❌ Failed to install globally."
-  echo "TensorAgent requires access to /usr/local/bin."
+# Force sudo authentication upfront
+if ! sudo -v; then
+  echo "❌ Sudo access is required to install TensorAgent."
   exit 1
 fi
 
-# --- Verify ---
+# Create symlink
+sudo ln -sf "$APP_DIR/tensoragent" /usr/local/bin/tensoragent
+
+# --- VERIFY INSTALL ---
+if [ ! -f "/usr/local/bin/tensoragent" ]; then
+  echo "❌ Failed to link TensorAgent into /usr/local/bin"
+  exit 1
+fi
+
+# Refresh shell command cache
+hash -r 2>/dev/null || true
+
+# Final check
 if ! command -v tensoragent >/dev/null 2>&1; then
   echo "❌ Installation verification failed."
   exit 1
 fi
 
+echo
+echo "✅ Installed TensorAgent successfully"
 echo
 echo "Run:"
 echo "  tensoragent orchestrate"
