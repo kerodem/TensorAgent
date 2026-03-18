@@ -1,0 +1,62 @@
+[
+  {
+    "id": "claude",
+    "name": "Claude CLI",
+    "description": "Anthropic CLI on-device",
+    "commandTemplate": "claude",
+    "defaultModel": "",
+    "binary": "claude",
+    "authCommand": "claude auth login",
+    "authNotes": "Authenticate once, then launch sessions."
+  },
+  {
+    "id": "codex",
+    "name": "Codex CLI",
+    "description": "OpenAI Codex CLI on-device",
+    "commandTemplate": "codex",
+    "defaultModel": "",
+    "binary": "codex",
+    "authCommand": "codex login",
+    "authNotes": "Authenticate once before starting model sessions."
+  },
+  {
+    "id": "gemini",
+    "name": "Gemini CLI",
+    "description": "Google Gemini CLI on-device",
+    "commandTemplate": "gemini",
+    "defaultModel": "",
+    "binary": "gemini",
+    "authCommand": "gemini auth login",
+    "authNotes": "Authenticate with your Google account."
+  },
+  {
+    "id": "ollama",
+    "name": "Ollama (Local)",
+    "description": "Local models via Ollama",
+    "commandTemplate": "ollama run {model}",
+    "defaultModel": "llama3.2",
+    "binary": "ollama",
+    "authCommand": "",
+    "authNotes": "No cloud auth required. Ensure Ollama is running."
+  },
+  {
+    "id": "lmstudio",
+    "name": "LM Studio (Local)",
+    "description": "LM Studio local runtime",
+    "commandTemplate": "lms chat {model}",
+    "defaultModel": "local-model",
+    "binary": "lms",
+    "authCommand": "",
+    "authNotes": "No cloud auth required. Start LM Studio server first."
+  },
+  {
+    "id": "custom-local",
+    "name": "Custom Local Runtime",
+    "description": "Template provider for vLLM, llama.cpp, and other local runtimes",
+    "commandTemplate": "echo 'Set a custom command override'",
+    "defaultModel": "",
+    "binary": "",
+    "authCommand": "",
+    "authNotes": "Use custom command override for this profile."
+  }
+]

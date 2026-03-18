@@ -1,0 +1,8 @@
+.DS_Store
+.build
+Build
+node_modules
+package-lock.json
+.pycache
+__pycache__
+*.pyc
