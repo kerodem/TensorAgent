@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_NAME="tensoragent"
-INSTALL_DIR="$HOME/.local/bin"
+INSTALL_DIR="/usr/local/bin"
 APP_DIR="$HOME/.tensoragent"
 REPO_URL="https://codeload.github.com/kerodem/TensorAgent/zip/refs/heads/main"
 
