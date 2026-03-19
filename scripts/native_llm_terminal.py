@@ -20,6 +20,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+TENSORAGENT_VERSION = "tensoragent0.0.1pa"
+TENSORAGENT_DOCS_URL = "https://blacktensor.net/docs"
+ASCII_BOOT_ICON = r"""
+ _   _
+| \  |
+|  \ |
+| |\ \
+| | \ \
+|_|  \_\
+""".strip("\n")
+
 
 @dataclass(frozen=True)
 class Provider:
@@ -95,6 +106,7 @@ def main() -> int:
             cwd=resolve_cwd(args.cwd),
             command=provider.auth_command,
         )
+        maybe_show_launch_splash(dry_run=args.dry_run)
         launch_specs([spec], mode=args.mode, tmux_session=args.tmux_session, dry_run=args.dry_run)
         return 0
 
@@ -115,6 +127,7 @@ def main() -> int:
             cwd=resolve_cwd(args.cwd),
             command=command,
         )
+        maybe_show_launch_splash(dry_run=args.dry_run)
         launch_specs([spec], mode=args.mode, tmux_session=args.tmux_session, dry_run=args.dry_run)
         return 0
 
@@ -130,6 +143,7 @@ def main() -> int:
             cwd=resolve_cwd(args.cwd),
             command=args.custom_command,
         )
+        maybe_show_launch_splash(dry_run=args.dry_run)
         launch_specs([spec], mode=args.mode, tmux_session=args.tmux_session, dry_run=args.dry_run)
         return 0
 
@@ -158,6 +172,7 @@ def main() -> int:
                 )
             )
 
+        maybe_show_launch_splash(dry_run=args.dry_run)
         launch_specs(specs, mode=args.mode, tmux_session=args.tmux_session, dry_run=args.dry_run)
         return 0
 
@@ -188,6 +203,8 @@ def main() -> int:
                     ),
                 )
             )
+
+        maybe_show_launch_splash(dry_run=args.dry_run)
 
         if args.auth_first:
             auth_specs = build_auth_specs(
@@ -253,6 +270,8 @@ def main() -> int:
                         command="printf '[idle pane]\\n'; exec zsh -l",
                     )
                 )
+
+        maybe_show_launch_splash(dry_run=args.dry_run)
 
         if args.auth_first:
             auth_specs = build_auth_specs(
@@ -721,6 +740,49 @@ def ensure_safe_shell_fragment(fragment: str, context: str) -> None:
         )
 
 
+def maybe_show_launch_splash(dry_run: bool) -> None:
+    if dry_run:
+        return
+    show_launch_splash()
+
+
+def show_launch_splash(delay_seconds: int = 5) -> None:
+    print(ASCII_BOOT_ICON)
+    print(TENSORAGENT_VERSION)
+    print("Preparing TensorAgent terminal orchestrator...")
+    time.sleep(max(delay_seconds, 0))
+
+
+def help_index_text() -> str:
+    lines = [
+        "",
+        "TensorAgent Help Index",
+        "======================",
+        "Command:",
+        "  ,help,,      Show this help index",
+        "",
+        "Basics:",
+        "  - Start full grid: tensoragent orchestrate",
+        "  - Check panes:     tensoragent orchestrate-status --session-name <name>",
+        "  - Send text:       tensoragent orchestrate-send --session-name <name> --target all --text '<prompt>'",
+        "  - Stop session:    tensoragent orchestrate-stop --session-name <name>",
+        "",
+        "Docs:",
+        f"  {TENSORAGENT_DOCS_URL}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def shell_help_function() -> str:
+    payload = shlex.quote(help_index_text())
+    return (
+        "function ,help,,() { "
+        f"printf %s {payload}; "
+        "}; "
+    )
+
+
 def launch_specs(specs: Iterable[LaunchSpec], mode: str, tmux_session: str, dry_run: bool) -> None:
     specs = list(specs)
     if not specs:
@@ -784,16 +846,23 @@ def wrap_shell_command(spec: LaunchSpec) -> str:
     provider_label = shlex.quote(spec.provider_id)
     cwd_label = shlex.quote(spec.cwd)
     cwd_part = shlex.quote(spec.cwd)
+    version_label = shlex.quote(TENSORAGENT_VERSION)
+    help_hint = shlex.quote("Type ,help,, and press Enter for TensorAgent help.")
+    help_shell_fn = shell_help_function()
 
     return (
         f"cd {cwd_part} && "
+        f"{help_shell_fn}"
         f"clear && "
+        f"printf %s\\n {version_label} && "
         f"echo '[session] title=' {title_label} ' provider=' {provider_label} && "
         f"echo '[session] cwd=' {cwd_label} && "
+        f"printf %s\\n {help_hint} && "
         f"{spec.command}; "
         "rc=$?; "
         "echo; "
         "echo '[session] process exited with code' $rc; "
+        f"printf %s\\n {help_hint}; "
         "exec zsh -l"
     )
 
@@ -827,6 +896,7 @@ def launch_tmux(specs: list[LaunchSpec], session_name: str, dry_run: bool) -> No
                 check=True,
             )
 
+    configure_tmux_header(session=session, mode_label="tmux")
     subprocess.run(["tmux", "attach-session", "-t", session], check=True)
 
 
@@ -858,6 +928,7 @@ def launch_tmux_panes(specs: list[LaunchSpec], session_name: str, dry_run: bool)
         )
         subprocess.run(["tmux", "select-layout", "-t", f"{session}:0", "tiled"], check=True)
 
+    configure_tmux_header(session=session, mode_label="tmux-panes")
     subprocess.run(["tmux", "set-option", "-t", session, "remain-on-exit", "on"], check=True)
     subprocess.run(["tmux", "attach-session", "-t", session], check=True)
 
@@ -900,9 +971,10 @@ def launch_orchestrator_grid(
 
     run_tmux(["set-option", "-t", session, "remain-on-exit", "on"])
     run_tmux(["set-option", "-t", session, "mouse", "on"])
+    run_tmux(["set-option", "-t", session, "status-position", "top"])
     run_tmux(["set-option", "-t", session, "pane-border-status", "top"])
     run_tmux(["set-option", "-t", session, "pane-border-format", "#{pane_index} #{pane_title}"])
-    run_tmux(["set-option", "-t", session, "status-left", f"[orchestrator:{session}] "])
+    run_tmux(["set-option", "-t", session, "status-left", f"[{TENSORAGENT_VERSION}] [orchestrator:{session}] "])
     run_tmux(["set-option", "-t", session, "status-right", "%Y-%m-%d %H:%M"])
 
     for pane_id, spec in zip(pane_ids, specs):
@@ -1018,6 +1090,12 @@ def run_tmux(args: list[str], capture: bool = False) -> str:
         fail(message)
 
     return result.stdout.strip() if capture else ""
+
+
+def configure_tmux_header(session: str, mode_label: str) -> None:
+    run_tmux(["set-option", "-t", session, "status-position", "top"])
+    run_tmux(["set-option", "-t", session, "status-left", f"[{TENSORAGENT_VERSION}] [{mode_label}:{session}] "])
+    run_tmux(["set-option", "-t", session, "status-right", "%Y-%m-%d %H:%M"])
 
 
 def sanitize_tmux_name(name: str) -> str:

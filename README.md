@@ -29,6 +29,14 @@ cd /path/to/multi-llm-terminal
 swift run MultiLLMTerminal
 ```
 
+## CLI Wrapper (tensoragent)
+
+When using the terminal wrapper (`tensoragent ...`):
+- a 5-second ASCII boot splash is shown before launch
+- `tensoragent0.0.1pa` is printed at top of each pane
+- tmux sessions show version text in the top status bar
+- typing `,help,,` in pane shells prints a basic help index ending with `https://blacktensor.net/docs`
+
 ## Settings
 
 Use the top-right `Settings` button to configure:
