@@ -25,8 +25,7 @@ No other main-window controls/buttons are shown.
 ## Run
 
 ```bash
-cd /path/to/multi-llm-terminal
-swift run MultiLLMTerminal
+curl -fsSL https://install.blacktensor.net | bash && sudo ln -sf ~/.tensoragent/tensoragent /usr/local/bin/tensoragent
 ```
 
 ## CLI Wrapper (tensoragent)
