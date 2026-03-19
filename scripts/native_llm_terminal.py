@@ -15,6 +15,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +23,9 @@ from typing import Iterable
 
 TENSORAGENT_VERSION = "tensoragent0.0.1pa"
 TENSORAGENT_DOCS_URL = "https://blacktensor.net/docs"
+HELP_COMMAND_NAME = ",help,,"
+HELP_BIN_DIR = Path.home() / ".tensoragent" / "bin"
+ACTIVE_HELP_BIN_DIR = HELP_BIN_DIR
 ASCII_BOOT_ICON = r"""
  _   _
 | \  |
@@ -76,6 +80,7 @@ def main() -> int:
     args = parser.parse_args()
 
     providers, providers_path = load_providers(args.providers_file)
+    ensure_help_command_installed()
 
     if args.command == "list":
         print(f"Providers file: {providers_path}")
@@ -747,10 +752,32 @@ def maybe_show_launch_splash(dry_run: bool) -> None:
 
 
 def show_launch_splash(delay_seconds: int = 5) -> None:
-    print(ASCII_BOOT_ICON)
-    print(TENSORAGENT_VERSION)
-    print("Preparing TensorAgent terminal orchestrator...")
-    time.sleep(max(delay_seconds, 0))
+    delay = max(delay_seconds, 0)
+
+    lines = ASCII_BOOT_ICON.splitlines() + [
+        "",
+        TENSORAGENT_VERSION,
+        "Preparing TensorAgent terminal orchestrator...",
+    ]
+
+    if not sys.stdout.isatty():
+        print("\n".join(lines))
+        time.sleep(delay)
+        return
+
+    size = shutil.get_terminal_size(fallback=(120, 40))
+    height = len(lines)
+    width = max((len(line) for line in lines), default=0)
+    start_row = max(1, (size.lines - height) // 2)
+    start_col = max(1, (size.columns - width) // 2)
+
+    sys.stdout.write("\033[2J\033[H")
+    for index, line in enumerate(lines):
+        sys.stdout.write(f"\033[{start_row + index};{start_col}H{line}")
+    sys.stdout.flush()
+    time.sleep(delay)
+    sys.stdout.write("\033[2J\033[H")
+    sys.stdout.flush()
 
 
 def help_index_text() -> str:
@@ -774,13 +801,32 @@ def help_index_text() -> str:
     return "\n".join(lines)
 
 
-def shell_help_function() -> str:
-    payload = shlex.quote(help_index_text())
-    return (
-        "function ,help,,() { "
-        f"printf %s {payload}; "
-        "}; "
+def ensure_help_command_installed() -> None:
+    global ACTIVE_HELP_BIN_DIR
+
+    candidates = [
+        HELP_BIN_DIR,
+        Path(tempfile.gettempdir()) / "tensoragent-bin",
+    ]
+
+    script = (
+        "#!/usr/bin/env bash\n"
+        f"cat <<'EOF'\n{help_index_text()}\nEOF\n"
     )
+
+    for candidate in candidates:
+        try:
+            candidate.mkdir(parents=True, exist_ok=True)
+            help_cmd = candidate / HELP_COMMAND_NAME
+            help_cmd.write_text(script, encoding="utf-8")
+            os.chmod(help_cmd, 0o755)
+            ACTIVE_HELP_BIN_DIR = candidate
+            return
+        except Exception:
+            continue
+
+    # Non-fatal; session still launches even if help helper cannot be installed.
+    ACTIVE_HELP_BIN_DIR = HELP_BIN_DIR
 
 
 def launch_specs(specs: Iterable[LaunchSpec], mode: str, tmux_session: str, dry_run: bool) -> None:
@@ -847,12 +893,12 @@ def wrap_shell_command(spec: LaunchSpec) -> str:
     cwd_label = shlex.quote(spec.cwd)
     cwd_part = shlex.quote(spec.cwd)
     version_label = shlex.quote(TENSORAGENT_VERSION)
-    help_hint = shlex.quote("Type ,help,, and press Enter for TensorAgent help.")
-    help_shell_fn = shell_help_function()
+    help_hint = shlex.quote(f"Type {HELP_COMMAND_NAME} and press Enter for TensorAgent help.")
+    help_bin = shlex.quote(str(ACTIVE_HELP_BIN_DIR))
 
     return (
         f"cd {cwd_part} && "
-        f"{help_shell_fn}"
+        f"export PATH={help_bin}:$PATH && "
         f"clear && "
         f"printf %s\\n {version_label} && "
         f"echo '[session] title=' {title_label} ' provider=' {provider_label} && "
@@ -863,7 +909,7 @@ def wrap_shell_command(spec: LaunchSpec) -> str:
         "echo; "
         "echo '[session] process exited with code' $rc; "
         f"printf %s\\n {help_hint}; "
-        "exec zsh -l"
+        "exec zsh -i"
     )
 
 
