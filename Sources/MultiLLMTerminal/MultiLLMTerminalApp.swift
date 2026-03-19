@@ -4,7 +4,7 @@ import SwiftUI
 struct MultiLLMTerminalApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LaunchGateView()
         }
         .defaultSize(width: 1540, height: 960)
         .windowResizability(.contentMinSize)

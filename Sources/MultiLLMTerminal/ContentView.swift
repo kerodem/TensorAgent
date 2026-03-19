@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel = OrchestratorViewModel()
+    @StateObject private var resourceMonitor = ResourceMonitor()
     @State private var showSettings = false
 
     private var errorBinding: Binding<Bool> {
@@ -27,6 +28,10 @@ struct ContentView: View {
         .frame(minWidth: 1500, minHeight: 920)
         .onAppear {
             viewModel.startIfNeeded()
+            resourceMonitor.start()
+        }
+        .onDisappear {
+            resourceMonitor.stop()
         }
         .sheet(isPresented: $showSettings, onDismiss: {
             viewModel.applySettingsAndRelaunch()
@@ -44,10 +49,23 @@ struct ContentView: View {
 
     private var topBar: some View {
         HStack(spacing: 10) {
-            Text(viewModel.orchestratorStatline)
-                .font(.custom("Menlo", size: 12))
-                .lineLimit(1)
-                .truncationMode(.tail)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("tensoragent0.0.1pa")
+                    .font(.custom("Menlo", size: 12))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Text(viewModel.orchestratorStatline)
+                    .font(.custom("Menlo", size: 12))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                Text(resourceMonitor.statline)
+                    .font(.custom("Menlo", size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
 
             Spacer(minLength: 0)
 
@@ -123,12 +141,22 @@ private struct PaneCard: View {
 
 private struct SettingsSheet: View {
     @ObservedObject var viewModel: OrchestratorViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Orchestrator Settings")
-                    .font(.title3.bold())
+                HStack {
+                    Text("Orchestrator Settings")
+                        .font(.title3.bold())
+
+                    Spacer(minLength: 0)
+
+                    Button("Close") {
+                        dismiss()
+                    }
+                    .keyboardShortcut(.cancelAction)
+                }
 
                 GroupBox("Global") {
                     VStack(alignment: .leading, spacing: 10) {
@@ -166,6 +194,9 @@ private struct SettingsSheet: View {
             .padding(14)
         }
         .frame(minWidth: 1000, minHeight: 760)
+        .onExitCommand {
+            dismiss()
+        }
     }
 }
 

@@ -7,7 +7,7 @@ final class OrchestratorViewModel: ObservableObject {
     @Published var cwdInput: String = FileManager.default.currentDirectoryPath
     @Published var skipSafetyChecks: Bool = false
     @Published var allowUnsafeShellCommands: Bool = false
-    @Published var autoLaunchOnStart: Bool = false
+    @Published var autoLaunchOnStart: Bool = true
     @Published var errorMessage: String?
 
     private var didInitialLaunch = false
@@ -110,7 +110,10 @@ final class OrchestratorViewModel: ObservableObject {
     private func launchSinglePane(_ pane: PaneSession, authOnly: Bool) {
         guard let provider = providerByID(pane.config.providerID) else {
             pane.clear()
-            pane.launch(command: "printf '[error] invalid provider selection\\n'; exec zsh -l", cwd: resolvedCWD())
+            pane.launch(
+                command: recoveryShellCommand("[error] invalid provider selection"),
+                cwd: resolvedCWD()
+            )
             return
         }
 
@@ -120,11 +123,18 @@ final class OrchestratorViewModel: ObservableObject {
             }
 
             let command = try renderCommand(provider: provider, config: pane.config, authOnly: authOnly)
-            pane.launch(command: command, cwd: resolvedCWD())
+            let wrapped = wrapSessionCommand(
+                command: command,
+                title: paneTitle(pane),
+                providerID: provider.id
+            )
+            pane.launch(command: wrapped, cwd: resolvedCWD())
         } catch {
             pane.clear()
-            let escaped = shellQuote("[error] \(error.localizedDescription)\n")
-            pane.launch(command: "printf %s \(escaped); exec zsh -l", cwd: resolvedCWD())
+            pane.launch(
+                command: recoveryShellCommand("[error] \(error.localizedDescription)"),
+                cwd: resolvedCWD()
+            )
         }
     }
 
@@ -278,6 +288,26 @@ final class OrchestratorViewModel: ObservableObject {
     private func containsUnsafeShellSyntax(_ value: String) -> Bool {
         let blockedMarkers = [";", "|", "&", "`", "$(", ">", "<", "\n", "\r"]
         return blockedMarkers.contains { value.contains($0) }
+    }
+
+    private func wrapSessionCommand(command: String, title: String, providerID: String) -> String {
+        let titleQuoted = shellQuote(title)
+        let providerQuoted = shellQuote(providerID)
+
+        return [
+            "clear",
+            "printf '[session] title=%s provider=%s\\n' \(titleQuoted) \(providerQuoted)",
+            command,
+            "rc=$?",
+            "echo",
+            "echo '[session] process exited with code' $rc",
+            "exec zsh -li"
+        ].joined(separator: "; ")
+    }
+
+    private func recoveryShellCommand(_ message: String) -> String {
+        let escaped = shellQuote("\(message)\n")
+        return "printf %s \(escaped); exec zsh -li"
     }
 
     func rebuildPanesIfNeeded() {

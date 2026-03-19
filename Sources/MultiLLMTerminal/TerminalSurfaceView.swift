@@ -134,6 +134,7 @@ final class TerminalTextView: NSTextView {
     var onInput: ((String) -> Void)?
 
     override var acceptsFirstResponder: Bool { true }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override func keyDown(with event: NSEvent) {
         if event.modifierFlags.contains(.control), let control = controlCharacter(for: event) {
