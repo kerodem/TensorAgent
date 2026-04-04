@@ -1,6 +1,6 @@
-# MultiLLMTerminal (Windowed In-App Orchestrator)
+# TensorAgent - multi-agentic AI harmonization & orchestration via CLI 
 
-LLM orchestrator that allows for the parallel running of multiple agent models at once via tmux
+LLM orchestrator that allows for the parallel running of multiple agent models at once in one window via tmux. allows for better monitoring of tasks instead of consistent context switching from one terminal window to another.
 
 ## features
 
