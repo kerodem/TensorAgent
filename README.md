@@ -8,6 +8,9 @@ LLM orchestrator that allows for the parallel running of multiple agent models a
 - windows are resizable
 - direct click-to-type process
 
+<img width="1115" height="956" alt="image" src="https://github.com/user-attachments/assets/72af2b7c-8154-43fb-a0f5-cccf3da58d27" />
+
+
 ## Terminal behavior
 
 - each pane is a real PTY-backed process running in-app
