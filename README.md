@@ -1,25 +1,18 @@
 # MultiLLMTerminal (Windowed In-App Orchestrator)
 
-A native macOS app that runs multiple CLI LLM processes in parallel inside one unified 3x2 terminal grid.
+LLM orchestrator that allows for the parallel running of multiple agent models at once via tmux
 
-## Interface contract
+## features
 
-Main window intentionally shows only:
-- a 5-second ASCII launch splash before app load
-- top label: `tensoragent0.0.1pa`
-- one system orchestrator statline
-- one live CPU/memory resource monitor line
-- one top-right `Settings` button
-- the 6 in-app terminal panes
-
-No other main-window controls/buttons are shown.
+- default linking with Gemini, Claude Code, Codex, and an optional extra window
+- windows are resizable
+- direct click-to-type process
 
 ## Terminal behavior
 
-- Each pane is a real PTY-backed process running in-app.
-- Click any pane and type directly.
-- Font is Menlo.
-- Panes run in parallel and are isolated from each other.
+- each pane is a real PTY-backed process running in-app
+- click any pane and type directly.
+- panes run in parallel and are isolated from each other.
 - Type `,help,,` in any pane to print the built-in help index and docs link.
 
 ## Run
@@ -30,7 +23,7 @@ curl -fsSL https://install.blacktensor.net | bash && sudo ln -sf ~/.tensoragent/
 
 ## CLI Wrapper (tensoragent)
 
-When using the terminal wrapper (`tensoragent ...`):
+when using the terminal wrapper (`tensoragent ...`):
 - a 5-second centered ASCII boot splash is shown before launch
 - `tensoragent0.0.1pa` is printed at top of each pane
 - tmux sessions show version text in the top status bar
@@ -38,14 +31,14 @@ When using the terminal wrapper (`tensoragent ...`):
 
 ## Settings
 
-Use the top-right `Settings` button to configure:
+use the top-right `Settings` button to configure:
 - working directory
 - safety checks
 - unsafe shell command override (off by default)
 - auto-launch behavior
 - per-pane provider/model/args/custom command
 
-Closing Settings automatically applies and relaunches the orchestration grid.
+closing settings automatically applies and relaunches the orchestration grid.
 
 ## Providers
 
