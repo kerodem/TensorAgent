@@ -23,7 +23,7 @@ LLM orchestrator that allows for the parallel running of multiple agent models a
 ```bash
 curl -fsSL https://install.blacktensor.net | bash && sudo ln -sf ~/.tensoragent/tensoragent /usr/local/bin/tensoragent
 ```
-after installation completes, run  ```tensoragent install```  to run TensorAgent.
+after installation completes, run  ```tensoragent orchestrate```  to run TensorAgent.
 
 ## CLI Wrapper (tensoragent)
 
