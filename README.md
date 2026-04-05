@@ -31,7 +31,7 @@ when using the terminal wrapper (`tensoragent ...`):
 - a 5-second centered ASCII boot splash is shown before launch
 - `tensoragent0.0.1pa` is printed at top of each pane
 - tmux sessions show version text in the top status bar
-- typing `,help,,` in pane shells prints a basic help index ending with `https://blacktensor.net/docs`
+- typing `,help,,` in pane shells prints a basic help index
 
 ## Settings
 
