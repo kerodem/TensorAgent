@@ -44,13 +44,4 @@ use the top-right `Settings` button to configure:
 
 closing settings automatically applies and relaunches the orchestration grid.
 
-## Providers
 
-Loaded from:
-1. `~/Library/Application Support/MultiLLMTerminal/providers.json`
-2. fallback local `providers.json`
-
-Fields used:
-- `id`, `name`, `description`
-- `commandTemplate`, `defaultModel`
-- `binary`, `authCommand`, `authNotes`
